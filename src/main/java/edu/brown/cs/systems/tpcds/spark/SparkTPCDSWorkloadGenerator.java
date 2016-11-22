@@ -68,39 +68,82 @@ public class SparkTPCDSWorkloadGenerator {
 			System.out.println("Unknown benchmark " + splits[0]);
 			return;
 		}
-		
-		// No query specified
-		if (splits.length <= 1) {
-			System.out.println("No query specified, expected dataset and query, eg impala-tpcds-modified-queries/q19.sql");
-			return;
-		}
-		
-		// Get the query
-		Query q = b.benchmarkQueries.get(splits[1]);
-		
-		// Bad query
-		if (q == null) {
-			System.out.println("Unknown query " + args[0]);
-			return;
-		}
-		
+
 		// Create from default settings
 		TPCDSSettings settings = TPCDSSettings.createWithDefaults();
-		System.out.printf("Running query %s on %s dataset %s\n", q, settings.dataFormat, settings.dataLocation);
 		SparkTPCDSWorkloadGenerator gen = spinUp("SparkTPCDSWorkloadGenerator", settings);
-
 		long postLoad = System.currentTimeMillis();
 
-		// Run the query
-		Row[] rows = gen.sqlContext.sql(q.queryText).collect();
-		
-		// Print the output rows
-		for (Row r : rows) {
-			System.out.println(r);
+		// all queries in the set of specific one
+		if (splits.length <= 1) {
+			int i = 0;
+			for (Query q: b.benchmarkQueries.values()) {
+				System.out.printf("Running query %s on %s dataset %s\n", q, settings.dataFormat, settings.dataLocation);
+				// Bad query
+				if (q == null) {
+					System.out.println("Unknown query " + args[0]);
+					return;
+				}
+
+				QueryRunnable runnable = new QueryRunnable(i, q, gen.sqlContext);
+				runnable.start();
+			}
+		} else {
+			// Get the query
+			Query q = b.benchmarkQueries.get(splits[1]);
+			System.out.printf("Running query %s on %s dataset %s\n", q, settings.dataFormat, settings.dataLocation);
+			// Bad query
+			if (q == null) {
+				System.out.println("Unknown query " + args[0]);
+				return;
+			}
+
+			// Run the query
+			Row[] rows = gen.sqlContext.sql(q.queryText).collect();
+
+			// Print the output rows
+			for (Row r : rows) {
+				System.out.println(r);
+			}
 		}
+		
+
 
 		long postQ = System.currentTimeMillis();
 		System.out.printf("Load time: %d, Query time: %d\n", postLoad-preLoad, postQ-postLoad);
+	}
+
+	static class QueryRunnable implements Runnable {
+		private Thread mThread;
+		private Query mQuery;
+		private int mIndex;
+		private SQLContext mContext;
+
+		QueryRunnable (int index, Query q, SQLContext context) {
+			mIndex = index;
+			mQuery = q;
+			mContext = context;
+		}
+
+		public void run() {
+			try {
+				Thread.sleep(mIndex * mIndex * 5000);
+				Row[] rows = mContext.sql(mQuery.queryText).collect();
+				for (Row r : rows) {
+					System.out.println(r);
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		public void start() {
+			if (mThread == null) {
+				mThread = new Thread(this, "Thread " + mIndex);
+				mThread.start();
+			}
+		}
 	}
 
 }
