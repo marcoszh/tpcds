@@ -41,6 +41,8 @@ public class SparkTPCDSDataGenerator {
 
 	public static void main(String[] args) {
 		TPCDSSettings settings = TPCDSSettings.createWithDefaults();
+		//settings.scaleFactor = 50;
+		//settings.dataLocation = "hdfs://ec2-52-3-220-154.compute-1.amazonaws.com:9000/tpcds";
 		System.out.println("Creating TPC-DS data using spark, with default settings:");
 		System.out.println(settings);
 		generateData(settings);
