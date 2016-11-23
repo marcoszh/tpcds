@@ -29,6 +29,7 @@ public class SparkTPCDSDataGenerator {
 	/** Generate data using the specified dataset settings */
 	public static void generateData(TPCDSSettings settings) {
 		SparkConf conf = new SparkConf().setAppName("TPC-DS generateData");
+		conf.set("spark.scheduler.mode", "FAIR");
 		SparkContext sc = new SparkContext(conf);
 		SQLContext sqlContext = new SQLContext(sc);
 		Tables tables = new Tables(sqlContext, settings.scaleFactor);

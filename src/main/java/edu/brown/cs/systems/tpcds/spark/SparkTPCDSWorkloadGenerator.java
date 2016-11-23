@@ -32,6 +32,7 @@ public class SparkTPCDSWorkloadGenerator {
 		this.name = name;
 		this.settings = settings;
 		this.sparkConf = new SparkConf().setAppName(name);
+		this.sparkConf.set("spark.scheduler.mode", "FAIR");
 		this.sparkContext = new SparkContext(sparkConf);
 		this.sqlContext = new HiveContext(sparkContext);
 		
