@@ -34,7 +34,7 @@ public class SparkTPCDSWorkloadGenerator {
 		this.sparkConf = new SparkConf().setAppName(name);
 		this.sparkConf.set("spark.scheduler.mode", "FAIR");
 		this.sparkContext = new SparkContext(sparkConf);
-		this.sqlContext = new HiveContext(sparkContext);
+		this.sqlContext = new SQLContext(sparkContext);
 		
 		// Load the tables into memory using the spark-sql-perf Tables code
 		this.tables = new Tables(sqlContext, settings.scaleFactor);
